@@ -10,6 +10,7 @@ import imutils
 import numpy as np
 import time
 import cPickle
+import selectivesearch
 
 CIFAR_IMG_SIZE = 32
 IMAGE_SIZE = 64
@@ -538,6 +539,69 @@ def get_custom_dataset_batch(batch_size, train_dataset_path, meanImage, std):
             count = count + 1
 
     return [image_batch, label_batch]
+
+
+
+
+def regionProposal(true_image):
+ 
+    if true_image is None:
+        return None
+
+    # true_image = cv2.resize(
+    #     true_image, (500, 500), interpolation=cv2.INTER_AREA)
+
+    img_size = true_image.shape
+    boundingBoxInfo = []
+    images = []
+    aspect_ratio_x = float(img_size[0]) / 300.0
+    aspect_ratio_y = float(img_size[1]) / 300.0
+
+    img = cv2.resize(
+        true_image, (300, 300), interpolation=cv2.INTER_AREA)
+
+    img_lbl, regions = selectivesearch.selective_search(
+        img, scale=100, sigma=7)
+
+    candidates = set()
+
+    for r in regions:
+        # excluding same rectangle (with different segments)
+        if r['rect'] in candidates:
+            continue
+        # # excluding regions smaller than 400 pixels
+        if r['size'] < 400:
+            continue
+        # distorted rects
+        x, y, w, h = r['rect']
+        if w == 0 or h == 0:
+            continue
+
+        candidates.add(r['rect'])
+
+    for x, y, w, h in candidates:
+        window = img[x: x + w, y: y + h]
+        window = cv2.resize(
+            window, (IMAGE_SIZE, IMAGE_SIZE), interpolation=cv2.INTER_AREA)
+        images.append(window)
+
+        new_x = int(x * aspect_ratio_x)
+        new_y = int(y * aspect_ratio_y)
+        new_w = int(w * aspect_ratio_x)
+        new_h = int(h * aspect_ratio_y)
+
+        boundingBoxInfo.append([new_x, new_y, new_w, new_h])
+    #     cv2.rectangle(true_image, (new_x, new_y),
+    #                   (new_x + new_w, new_y + new_h), (0, 255, 0), 2)
+
+    # cv2.imshow("Window", true_image)
+    # cv2.waitKey(1000)
+    # time.sleep(10)
+
+    return [true_image, np.array(images), boundingBoxInfo]
+
+
+
 
 
 if __name__ == '__main__':

@@ -46,15 +46,14 @@ class Ros_Baxter_Detector:
         #### direct conversion to IMAGE NP ARRAY  ####
         np_arr = np.fromstring(ros_data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
- 
+        
+
         top_results = 2  # number of crops to show for detection
         predicting_class = 1
         predictions = []
 
         # TODO : tensorflow image detection starts here
-      
         [meanImage, std] = inputProcessor.getNormalizationData("src/beginner_tutorials/scripts/data/custom_train_data.csv")
-       
         baxterClassifier = baxter.BaxterClassifier()
         
 
@@ -71,7 +70,7 @@ class Ros_Baxter_Detector:
             print("starting session... ")
 
             # GET IMAGE FROM USER INPUT
-            batch = inputProcessor.get_img_crops(image_np)
+            batch = inputProcessor.regionProposal(image_np)
 
             if batch is None:
                 print("something went wrong when getting images crops ... ")
@@ -100,7 +99,7 @@ class Ros_Baxter_Detector:
 
             # filter correctly detected crops
             for y in range(batch_size):
-                prob = prediction[y][predictingClass]
+                prob = prediction[y][predicting_class]
                 boundingBox = boundingBoxInfo[y]
                 predictions.append([prob, boundingBox])
 
@@ -133,7 +132,8 @@ def main(args):
     try:
         #####  READ IMAGE FROM DATA FILE TO SEND TO SUBSCRIBER 
         filename = 'src/beginner_tutorials/scripts/data/custom_block/1.jpg'
-        image_np = cv2.imread(filename.strip())
+        image_np = cv2.resize(cv2.imread(filename.strip()), (400, 400), interpolation=cv2.INTER_AREA)     
+
 
         #### FORMATTING IMAGE INTO MESSAGE TO PUBLISH 
         msg = CompressedImage()
