@@ -131,7 +131,7 @@ def main(args):
     rospy.init_node('image_feature', anonymous=True)
     try:
         #####  READ IMAGE FROM DATA FILE TO SEND TO SUBSCRIBER 
-        filename = 'src/beginner_tutorials/scripts/data/custom_block/1.jpg'
+        filename = 'src/beginner_tutorials/scripts/data/test_custom/both4.jpg'
         image_np = cv2.resize(cv2.imread(filename.strip()), (400, 400), interpolation=cv2.INTER_AREA)     
 
 
