@@ -9,7 +9,7 @@ import numpy as np
 import os
 from scipy.ndimage import filters
 import cv2
-
+from std_msgs.msg import String
 # Ros libraries
 import roslib
 import rospy
@@ -22,12 +22,19 @@ import baxterClassifier as baxter
 
 VERBOSE=True
 
+boxPub = None;
 
 def listener():
 	# subscribed Topic
 	rospy.init_node('listener', anonymous=True)
 	subscriber = rospy.Subscriber("images",CompressedImage, callback,  queue_size = 1)
+	box = rospy.Publisher("boxtalk", String, queue_size = 1)
+	setboxPub(box)
 	rospy.spin()
+
+def setboxPub(box):
+	global boxPub
+	boxPub = box
 
 
 def callback(ros_data):
@@ -107,7 +114,8 @@ def callback(ros_data):
             y = boundingBoxData[1][1]
             winW = boundingBoxData[1][2]
             winH = boundingBoxData[1][3]
-            sendBox(boundingBoxData[1])
+            val = str(x) + " " + str(y) + " " + str(winW) + " " + str(winH)
+            sendBox(val)
 
             # if boundingBoxData[0] > threshold:
             cv2.rectangle(original_img, (x, y),
@@ -124,10 +132,10 @@ def callback(ros_data):
     #self.subscriber.unregister()
 
 def sendBox(data):
-	rospy.init_node('talker', anonymous=True)
-	boxPub = rospy.Publisher("box", MultiArrayLayout, queue_size = 1)
+	print("publisher")
+	print(data)
 	boxPub.publish(data)
-	rospy.spin()
+	print("boxpub")
 
 if __name__ == '__main__':
     listener()

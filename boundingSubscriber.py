@@ -9,7 +9,7 @@ import numpy as np
 import os
 from scipy.ndimage import filters
 import cv2
-
+from std_msgs.msg import String
 # Ros libraries
 import roslib
 import rospy
@@ -24,16 +24,20 @@ VERBOSE=True
 
 def listener():
 	# subscribed Topic
-	rospy.init_node('listener', anonymous=True)
-    box = Box()
-	subscriber = rospy.Subscriber("box", box, callback,  queue_size = 1)
-	rospy.spin()
+    print("here")
+    rospy.init_node('listener', anonymous=True)
+    print("in it")
+    subscriber = rospy.Subscriber("boxtalk", String, callback,  queue_size = 1)
+    rospy.spin()
 
 def callback(data):
-    rospy.login(rospy.get_caller_id() + "I heard %s", data.data)
-
+    print("i heard")
+    print(data)
 
 if __name__ == '__main__':
-    listener()
+    try:
+        listener()
+    except rospy.ROSInterruptException:
+        pass
 
 #our subscriber takes an image and outbounds 4 bounding boxes, once that's done we want subscriber to publish the 4 coordinates
